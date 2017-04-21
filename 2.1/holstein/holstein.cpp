@@ -1,6 +1,6 @@
 /*
 ID: ahmed_f6
-PROG: sort3
+PROG: holstein
 LANG: C++
 */
 #include <iostream>
@@ -10,15 +10,53 @@ LANG: C++
 #include <cstdlib>
 using namespace std;
 
-int VL[26];
-int AL[26]={0};
-int GL[16][26];
+int V,G;
+short VL[25];
+short GL[15][25];
+
+bool  DP[1<<15+1] = {false};
+short DP_v[1<<15+1][25];
+
+bool check(int mask,int k){
+	bool f=true;
+	int nMask = mask | (1<<k);
+	for(int i=0;i<V;i++){
+		DP_v[nMask][i] = DP_v[mask][i] + GL[k][i];
+		if( DP_v[nMask][i] < VL[i])
+			f = false;
+	}
+	
+	return f;
+}
+
+int find(int mask,int k,int deepth){
+	
+	for(int i=k;i<G;i++)
+		if(!((1<<i) & mask)){
+			int nMask = (1<<i) | mask;
+			if(deepth > 0){
+				int res = find(nMask,i,deepth-1);
+				if( res !=-1)
+					return res;
+			}
+			else{
+				if(DP[nMask])
+					continue;
+				
+				if(check(mask,i))
+					return nMask;
+				
+				DP[nMask]=true;
+			}
+		}
+
+	return -1;
+}
 
 int main() {
-    ofstream fout ("sort3.out");
-    ifstream fin ("sort3.in");
-	
-	int V,G;
+    ofstream fout ("holstein.out");
+    ifstream fin ("holstein.in");
+
 	fin >> V;
 	for(int i=0;i<V;i++)
 		fin >> VL[i]; 
@@ -28,14 +66,23 @@ int main() {
 		for(int j=0;j<V;j++)
 			fin >> GL[i][j];
 	
-	int m = 0;
-	int l= 1 << G;
-	while(m < l){
-		int x = m ^ ++m;
-		int a = x & m;
-		int r = x &(~m);
-		
+	
+	int mask =-1;
+	
+	for(int i=0;i<G;i++){
+		mask = find(0,0,i);
+		if(mask!=-1)
+			break;
 	}
 	
+	int count=0;
+	for(int i=0;i<G;i++)
+		if((1<<i)&mask)
+			count++;
+	fout<<count;
+	for(int i=0;i<G;i++)
+		if((1<<i)&mask)
+			fout<<" "<<(i+1);
+	fout<<endl;
 	return 0;
 }
